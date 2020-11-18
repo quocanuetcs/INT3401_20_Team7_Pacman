@@ -344,7 +344,7 @@ class CornersProblem(search.SearchProblem):
                 nextState = ((nextx, nexty), isVisited)
                 successors.append((nextState, action, 1))
 
-        self._expanded += 1  # DO NOT CHANGE
+        self._expanded += 1 # DO NOT CHANGE
         return successors
 
     def getCostOfActions(self, actions):
@@ -353,7 +353,7 @@ class CornersProblem(search.SearchProblem):
         include an illegal move, return 999999.  This is implemented for you.
         """
         if actions == None: return 999999
-        x, y = self.startingPosition
+        x,y= self.startingPosition
         for action in actions:
             dx, dy = Actions.directionToVector(action)
             x, y = int(x + dx), int(y + dy)
@@ -547,6 +547,9 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
+        #Gọi lại hàm BFS đã viết để xử lí
+        ListOfActions = search.bfs(problem)
+        return ListOfActions
         util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -583,6 +586,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
+        # Check vị trí của trạng thái
+        isGoal = self.food[x][y]
+
+        return isGoal
+
         util.raiseNotDefined()
 
 def mazeDistance(point1, point2, gameState):
