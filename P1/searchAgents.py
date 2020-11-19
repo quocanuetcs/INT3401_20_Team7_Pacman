@@ -268,10 +268,10 @@ def euclideanHeuristic(position, problem, info={}):
 
 class CornersProblem(search.SearchProblem):
     """
-       This search problem finds paths through all four corners of a layout.
+    This search problem finds paths through all four corners of a layout.
 
-       You must select a suitable state space and successor function
-       """
+    You must select a suitable state space and successor function
+    """
 
     def __init__(self, startingGameState):
         """
@@ -288,10 +288,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        # cornersState[i]: whether the ith corner is found
-        cornersState = (False, False, False, False)
-        self.startState = (self.startingPosition, cornersState)
-        self.goal = (True, True, True, True)
+        self.visited_corner = [0, 0, 0, 0]
 
     def getStartState(self):
         """
@@ -299,15 +296,20 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return self.startState
+        return (self.startingPosition, self.visited_corner)
+
+        util.raiseNotDefined()
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        isGoal = state[1] == self.goal
-        return isGoal
+        for corner in state[1]:
+            if corner == 0:
+                return False
+        return True
+        util.raiseNotDefined()
 
     def getSuccessors(self, state):
         """
@@ -330,25 +332,19 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
-            currentPosition = state[0]
-            x, y = currentPosition
+            x, y = state[0]
+            isVisited = list(state[1])
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
-            nextPosition = (nextx, nexty)
             hitsWall = self.walls[nextx][nexty]
             if not hitsWall:
-                cornersState = state[1]
-                for i in range(len(self.corners)):
-                    if nextPosition == self.corners[i]:
-                        cornersState = list(cornersState)
-                        cornersState[i] = True
-                        cornersState = tuple(cornersState)
+                if (nextx, nexty) in self.corners:
+                    isVisited[self.corners.index((nextx, nexty))] = 1
 
-                nextState = (nextPosition, cornersState)
-                cost = 1
-                successors.append((nextState, action, cost))
+                nextState = ((nextx, nexty), isVisited)
+                successors.append((nextState, action, 1))
 
-        self._expanded += 1  # DO NOT CHANGE
+        self._expanded += 1 # DO NOT CHANGE
         return successors
 
     def getCostOfActions(self, actions):
@@ -357,7 +353,7 @@ class CornersProblem(search.SearchProblem):
         include an illegal move, return 999999.  This is implemented for you.
         """
         if actions == None: return 999999
-        x, y = self.startingPosition
+        x,y= self.startingPosition
         for action in actions:
             dx, dy = Actions.directionToVector(action)
             x, y = int(x + dx), int(y + dy)
@@ -382,31 +378,37 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    import itertools
+    def permutation(list):
+        if len(list) == 0:
+            return []
+        if len(list) == 1:
+            return [list]
+        l = []
+        for i in range(len(list)):
+            m = list[i]
+            remlist = list[:i] + list[i + 1:]
+            for p in permutation(remlist):
+                l.append([m] + p)
+        return l
+
     pacmanPosition, cornersState = state
 
-    # Gets a list of corners that have not been visited
-    remainingCorners = []
+    visitedCorner = []
     for i in range(len(cornersState)):
         if not cornersState[i]:
-            remainingCorners.append(i)
+            visitedCorner.append(i)
 
-    # Returns 0 at goal states
-    if len(remainingCorners) == 0:
+    if len(visitedCorner) == 0:
         return 0
 
-    # Tries all solutions without considering walls and
-    # takes the smallest cost
     result = float('inf')
-    orderToVisitPermutations = list(itertools.permutations(remainingCorners, len(remainingCorners)))
+    orderToVisitPermutations = list(permutation(visitedCorner))
     for order in orderToVisitPermutations:
-        heuristicValue = util.manhattanDistance(pacmanPosition, corners[order[0]])
+        totalDistance = util.manhattanDistance(pacmanPosition, corners[order[0]])
         for i in range(1, len(order)):
-            heuristicValue += util.manhattanDistance(corners[order[i - 1]], corners[order[i]])
-
-        if result > heuristicValue:
-            result = heuristicValue
-
+            totalDistance += util.manhattanDistance(corners[order[i - 1]], corners[order[i]])
+        if result > totalDistance:
+            result = totalDistance
     return result
 
 class AStarCornersAgent(SearchAgent):
@@ -545,6 +547,9 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
+        #Gọi lại hàm BFS đã viết để xử lí
+        ListOfActions = search.bfs(problem)
+        return ListOfActions
         util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -581,6 +586,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
+        # Check vị trí của trạng thái
+        isGoal = self.food[x][y]
+
+        return isGoal
+
         util.raiseNotDefined()
 
 def mazeDistance(point1, point2, gameState):
