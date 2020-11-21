@@ -37,6 +37,9 @@ class ReflexAgent(Agent):
 
         Just like in the previous project, getAction takes a GameState and returns
         some Directions.X for some X in the set {NORTH, SOUTH, WEST, EAST, STOP}
+
+        Chon huong di tot nhat de di
+        Lay vao getstate va tra ve huong
         """
         # Collect legal moves and successor states
         legalMoves = gameState.getLegalActions()
@@ -58,10 +61,10 @@ class ReflexAgent(Agent):
         The evaluation function takes in the current and proposed successor
         GameStates (pacman.py) and returns a number, where higher numbers are better.
 
-        The code below extracts some useful information from the state, like the
-        remaining food (newFood) and Pacman position after moving (newPos).
-        newScaredTimes holds the number of moves that each ghost will remain
-        scared because of Pacman having eaten a power pellet.
+        The code below extracts some useful information from the state,
+        ----- the remaining food (newFood)
+        ----- Pacman position after moving (newPos).
+        ----- newScaredTimes holds the number of moves that each ghost will remain scared because of Pacman having eaten a power pellet.
 
         Print out these variables to see what you're getting, then combine them
         to create a masterful evaluation function.
@@ -74,7 +77,42 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        #print(currentGameState.getNumAgents())
+        curPos = currentGameState.getPacmanPosition()
+        newFoodPos = newFood.asList()
+        ghostPos = successorGameState.getGhostPositions()
+        ghostDis = []
+
+        #Tinh khoang cach pacman voi ghost
+        for ghost in ghostPos:
+            ghostDis.append(manhattanDistance(newPos,ghost))
+
+        #tinh evaluation
+        #Khong duoc cham vao ghost
+        for idx,dist in enumerate(ghostDis):
+            if dist < 2 and newScaredTimes[idx]<10:
+                return (-(float("inf")))
+        #Chien thang
+        if len(newFoodPos) == 0:
+            return float("inf")
+        evaluation = 0
+        #An food ngay khi co the
+        if newPos in currentGameState.getFood().asList():
+            evaluation = 10000
+        #Neu khong gian duoc so luong food -> tim duuong den food
+        else:
+            if action == 'Stop':
+                return (-(float("inf")))
+            target = currentGameState.getFood().asList()[0]
+            target_X = int(target[0])
+            target_Y = int(target[1])
+            curPos_X = int(curPos[0])
+            curPos_Y = int(curPos[1])
+            if (target_X<curPos_X) and action == 'West': evaluation +=  5000
+            if (target_X >curPos_X) and action == 'East': evaluation += 5000
+            if (target_Y < curPos_Y) and action == 'South': evaluation += 1000
+            if (target_Y > curPos_Y) and action == 'North': evaluation += 1000
+        return  evaluation
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -118,25 +156,60 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         Here are some method calls that might be useful when implementing minimax.
 
-        gameState.getLegalActions(agentIndex):
-        Returns a list of legal actions for an agent
-        agentIndex=0 means Pacman, ghosts are >= 1
+        -----gameState.getLegalActions(agentIndex):
+                            Returns a list of legal actions for an agent
+                            agentIndex=0 means Pacman, ghosts are >= 1
+        -----gameState.generateSuccessor(agentIndex, action):
+                            Returns the successor game state after an agent takes an action
 
-        gameState.generateSuccessor(agentIndex, action):
-        Returns the successor game state after an agent takes an action
+        -----gameState.getNumAgents():
+                            Returns the total number of agents in the game
 
-        gameState.getNumAgents():
-        Returns the total number of agents in the game
+        -----gameState.isWin():
+                            Returns whether or not the game state is a winning state
 
-        gameState.isWin():
-        Returns whether or not the game state is a winning state
-
-        gameState.isLose():
-        Returns whether or not the game state is a losing state
+        -----gameState.isLose():
+                            Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        ##Toi da hoa gia tri cho pacman
+        def maxValue(gameState, depth):
+            pacmanAct = gameState.getLegalActions(0)
 
+            #Neu khong con duong di hoac thang hoac thua hoac dat den do sau can thiet thi return
+            if len(pacmanAct)==0 or gameState.isWin() or gameState.isLose() or depth==self.depth:
+                return(self.evaluationFunction(gameState), None)
+
+            maxEvaluation = -(float("inf"))
+            maxAction = None
+            for action in pacmanAct:
+                tmpEvaluation, tmpAction = minValue(gameState.generateSuccessor(0,action),1,depth)
+                if tmpEvaluation>maxEvaluation:
+                    maxEvaluation = tmpEvaluation
+                    maxAction = action
+            return maxEvaluation, maxAction
+
+        ##Toi thieu hoa gia tri cua ghost
+        def minValue(gameState, ghostIndex, depth):
+            ghostAction = gameState.getLegalActions(ghostIndex)
+            if len(ghostAction)==0:
+                return self.evaluationFunction(gameState), None
+
+            minEvalution =float("inf")
+            minAction = None
+            for action in ghostAction:
+                ###neu la con ma cuoi cung thi goi ham max
+                if ghostIndex == gameState.getNumAgents() -1:
+                    tmpEvalution, tmpAction = maxValue(gameState.generateSuccessor(ghostIndex, action), depth+1)
+                ###neu khong thi goi nhung con ma khac
+                else:
+                    tmpEvalution, tmpAction = minValue(gameState.generateSuccessor(ghostIndex, action), ghostIndex +1, depth)
+                if (tmpEvalution<minEvalution):
+                    minAction = action
+                    minEvalution = tmpEvalution
+            return (minEvalution, tmpEvalution)
+        maxAction = maxValue(gameState,0)[1]
+        return maxAction
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
