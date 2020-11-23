@@ -220,7 +220,57 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        ##Toi da hoa gia tri cho pacman
+        def maxValue(gameState, depth,a,b):
+            pacmanAct = gameState.getLegalActions(0)
+
+            # Neu khong con duong di hoac thang hoac thua hoac dat den do sau can thiet thi return
+            if len(pacmanAct) == 0 or gameState.isWin() or gameState.isLose() or depth == self.depth:
+                return (self.evaluationFunction(gameState), None)
+
+            maxEvaluation = -(float("inf"))
+            maxAction = None
+            for action in pacmanAct:
+                tmpEvaluation, tmpAction = minValue(gameState.generateSuccessor(0, action),1,depth,a,b)
+                if tmpEvaluation > maxEvaluation:
+                    maxEvaluation = tmpEvaluation
+                    maxAction = action
+                if maxEvaluation > b :
+                    return maxEvaluation,maxAction
+                a = max(a,maxEvaluation)
+
+            return maxEvaluation, maxAction
+
+        ##Toi thieu hoa gia tri cua ghost
+        def minValue(gameState, ghostIndex, depth,a,b):
+            ghostAction = gameState.getLegalActions(ghostIndex)
+            if len(ghostAction) == 0:
+                return self.evaluationFunction(gameState), None
+
+            minEvalution = float("inf")
+            minAction = None
+            for action in ghostAction:
+                #neu la con ma cuoi cung thi goi ham max
+                if ghostIndex == gameState.getNumAgents() - 1:
+                    tmpEvalution, tmpAction = maxValue(gameState.generateSuccessor(ghostIndex, action), depth + 1,a,b)
+                #neu khong thi goi nhung con ma khac
+                else:
+                    tmpEvalution, tmpAction = minValue(gameState.generateSuccessor(ghostIndex, action), ghostIndex + 1,depth,a,b)
+                if (tmpEvalution < minEvalution):
+                    minAction = action
+                    minEvalution = tmpEvalution
+                if minEvalution < a:
+                    return minEvalution,minAction
+                b = min(b,minEvalution)
+
+            return(minEvalution, minAction)
+
+        a =-(float('inf'))
+        b =float('inf')
+        maxAction = maxValue(gameState, 0,a,b)[1]
+        return maxAction
+
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -235,6 +285,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
+
+
         util.raiseNotDefined()
 
 def betterEvaluationFunction(currentGameState):
