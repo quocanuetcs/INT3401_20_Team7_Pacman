@@ -92,7 +92,9 @@ def depthFirstSearch(problem):
 
     stack.push((problem.getStartState(), []))
     while not stack.isEmpty():
-        cur_state, direction = stack.pop()
+        tmp = stack.pop()
+        cur_state = tmp[0]
+        direction = tmp[1]
         if problem.isGoalState(cur_state):
             return direction
         if cur_state not in visited_state:
@@ -112,7 +114,9 @@ def breadthFirstSearch(problem):
 
     queue.push((problem.getStartState(), []))
     while not queue.isEmpty():
-        cur_state, direction = queue.pop()
+        tmp = queue.pop()
+        cur_state = tmp[0]
+        direction = tmp[1]
         if problem.isGoalState(cur_state):
             return direction
         if cur_state not in visited_state:
@@ -131,9 +135,12 @@ def uniformCostSearch(problem):
     visited_state = []
     cost = 0
 
-    pq.push((problem.getStartState(), [], cost), cost)
+    pq.push((problem.getStartState(), [], 0), 0)
     while not pq.isEmpty():
-        cur_state, direction, cost = pq.pop()
+        tmp = pq.pop()
+        cur_state = tmp[0]
+        direction = tmp[1]
+        cost = tmp[2]
         if problem.isGoalState(cur_state):
             return direction
         if cur_state not in visited_state:
@@ -160,9 +167,12 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     visited_state = []
     cost = 0
 
-    pq.push((problem.getStartState(), [], cost), cost)
+    pq.push((problem.getStartState(), [], 0), 0)
     while not pq.isEmpty():
-        cur_state, direction, cost = pq.pop()
+        tmp = pq.pop()
+        cur_state = tmp[0]
+        direction = tmp[1]
+        cost = tmp[2]
         if problem.isGoalState(cur_state):
             return direction
         if cur_state not in visited_state:
