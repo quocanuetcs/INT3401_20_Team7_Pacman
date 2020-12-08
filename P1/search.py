@@ -19,6 +19,7 @@ Pacman agents (in searchAgents.py).
 
 import util
 
+
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -70,7 +71,8 @@ def tinyMazeSearch(problem):
     from game import Directions
     s = Directions.SOUTH
     w = Directions.WEST
-    return  [s, s, w, s, w, w, s, w]
+    return [s, s, w, s, w, w, s, w]
+
 
 def depthFirstSearch(problem):
     """
@@ -101,10 +103,11 @@ def depthFirstSearch(problem):
             visited_state.append(cur_state)
             next_state = problem.getSuccessors(cur_state)
             for state in next_state:
-                if(state[0] not in visited_state):
+                if (state[0] not in visited_state):
                     stack.push((state[0], direction + [state[1]]))
     return []
     util.raiseNotDefined()
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -127,6 +130,7 @@ def breadthFirstSearch(problem):
                     queue.push((state[0], direction + [state[1]]))
     return []
     util.raiseNotDefined()
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
@@ -153,12 +157,14 @@ def uniformCostSearch(problem):
 
     util.raiseNotDefined()
 
+
 def nullHeuristic(state, problem=None):
     """
     A heuristic function estimates the cost from the current state to the nearest
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
+
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
@@ -180,7 +186,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             next_state = problem.getSuccessors(cur_state)
             for state in next_state:
                 if (state[0] not in visited_state):
-                    pq.push((state[0], direction + [state[1]], state[2] + cost), state[2] + cost + heuristic(state[0], problem))
+                    pq.push((state[0], direction + [state[1]], state[2] + cost),
+                            state[2] + cost + heuristic(state[0], problem))
     return []
     util.raiseNotDefined()
 
