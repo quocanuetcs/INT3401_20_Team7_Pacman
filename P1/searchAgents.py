@@ -504,19 +504,101 @@ def foodHeuristic(state, problem):
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
     foodPositions = foodGrid.asList()
-    numFood = len(foodPositions)
-
-    if problem.isGoalState(state):
+    foodCount = len(foodPositions)
+    if foodCount == 0:
         return 0
-    if numFood==0:
-        return 0;
 
-    distance = mazeDistance(position, foodPositions[0], problem.startingGameState)
-    for val in foodPositions[1:]:
-        tmp = mazeDistance(position, val, problem.startingGameState)
-        if tmp>distance:
-            distance = tmp
-    return distance
+    # w[i]: là trọng số của viên thức ăn thứ i
+    w = util.Counter()
+    result = 0
+
+    # Held-Karp Lower Bound
+    #Lặp lại nhiều lần để lấy được giá trị heuristic cao hơn
+    for loop in range(2):
+        #Chọn 2 foods có trọng số nhỏ nhất
+        wLocMin = 0
+        wLocSecondMin = -1
+        for i in range(1, foodCount):
+            if w[wLocMin] > w[i]:
+                wLocSecondMin = wLocMin
+                wLocMin = i
+            elif wLocSecondMin == -1 or w[wLocSecondMin] > w[i]:
+                wLocSecondMin = i
+
+        # Chọn food gần nhất để đi tới đầu tiên
+        minDist = float('inf')
+        minLocDist = float('inf')
+
+        for i in range(foodCount):
+            distFromPacman = util.manhattanDistance(position, foodPositions[i])
+            if minDist > distFromPacman:
+                minDist = distFromPacman
+                minLocDist = i
+
+        #Khởi tạo hàm heuristicValue bao gồm trong số điểm bắt đầu điểm kết thúc và đường đi từ pacman tới điểm bắt đầu
+        heuristic = util.manhattanDistance(position, foodPositions[minLocDist]) + w[minLocDist]
+        if minLocDist != wLocMin:
+            heuristic += w[wLocMin]
+        elif wLocSecondMin != -1:
+            heuristic += w[wLocSecondMin]
+
+        if foodCount == 1:
+            return heuristic
+
+        # Khởi tạo hàng đợi ưu tiên
+            # d[i]: là bậc của điểm  thứ i trong cây khung nhỏ nhất
+        d = util.Counter()
+            # đánh dấu liên kết giữa các điểm  trong cây khung nhỏ nhất
+        trace = {}
+            #Khởi tạo hàng đợi ưu tiên
+        queue = util.PriorityQueue()
+            #f lưu khoảng cách có trọng số từ đỉnh gần nhất tới đỉnh i
+        f = {}
+             #remainingFood lưu các điểm còn lại
+        remainingFood = set()
+        for i in range(1, foodCount):
+            distFromFirstFood = util.manhattanDistance(foodPositions[0], foodPositions[i])
+            distFromFirstFoodWithWeight = w[0] + distFromFirstFood + w[i]
+            f[i] = distFromFirstFoodWithWeight
+            queue.push(i, distFromFirstFoodWithWeight)
+            trace[i] = 0
+            remainingFood.add(i)
+
+        #Xây dựng cây khung nhỏ nhất theo thuật toán Prim
+        while not queue.isEmpty():
+            #lấy điểm gần cây khung nhất sao cho kết nối được với cây khung đó
+            currentFood = queue.pop()
+            #Tính tổng các canh của cây kh
+            heuristic += f[currentFood] - w[currentFood] - w[trace[currentFood]]
+            #Tăng bậc của điểm nối và điểm được nối 
+            d[currentFood] += 1
+            d[trace[currentFood]] += 1
+            #Xóa điểm đã xét ra khỏi danh sách
+            remainingFood.remove(currentFood)
+
+            # Cập nhập lại khoảng cách từ các đỉnh còn lại tới cây
+            for i in remainingFood:
+                distance = util.manhattanDistance(foodPositions[currentFood], foodPositions[i])
+                if minDist > distance:
+                    minDist = distance
+
+                distWithWeight = w[currentFood] + distance + w[i]
+                if f[i] > distWithWeight:
+                    f[i] = distWithWeight
+                    queue.update(i, distWithWeight)
+                    trace[i] = currentFood
+
+        for i in range(foodCount):
+            heuristic += (d[i] - 2) * w[i]
+
+        # Cập nhập trọng số của các điểm dựa vào bậc của điểm đó
+        for i in range(foodCount):
+            w[i] = w[i] + (d[i] - 2) * minDist / 2
+
+        if result < heuristic:
+            result = heuristic
+
+    return result
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
